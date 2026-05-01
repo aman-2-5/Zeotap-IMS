@@ -41,6 +41,16 @@ flowchart TD
 - Observability: `/health` endpoint + throughput logs every 5 seconds.
 - UI Enhancement: Toggle to show/hide closed incidents for better observability.
 
+## Non-Functional Considerations
+
+This system incorporates key non-functional aspects expected in production-grade SRE systems:
+
+- Performance: Async processing, high-throughput ingestion, and backpressure handling ensure system stability under burst load.
+- Reliability: Retry logic and transactional updates prevent data loss and ensure consistency.
+- Scalability: Stateless ingestion and decoupled architecture allow horizontal scaling.
+- Observability: Health checks and throughput metrics provide system visibility.
+- Fault Tolerance: Fail-fast behavior and queue buffering prevent cascading failures.
+
 ## Run Locally (Docker Compose)
 1. Ensure Docker Desktop is running.
 2. From repo root:
