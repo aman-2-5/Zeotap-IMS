@@ -5,7 +5,7 @@
 - **Role:** Infrastructure / SRE Intern
 
 ## **GitHub Repository**
-- **Repository Link:** `(https://github.com/aman-2-5/Zeotap-IMS)`
+- **Repository Link:** `https://github.com/aman-2-5/Zeotap-IMS`
 
 ## **Problem Statement**
 Built a resilient Incident Management System (IMS) for high-volume distributed-system failure signals. The system ingests, debounces, persists, alerts, and tracks incidents through to closure with mandatory RCA and MTTR computation.
