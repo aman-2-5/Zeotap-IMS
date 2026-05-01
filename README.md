@@ -1,6 +1,8 @@
 # Incident Management System (IMS)
 
-A resilient Incident Management System for high-volume signal ingestion, workflow-driven incident handling, and mandatory RCA closure.
+A production-style resilient system for high-volume signal ingestion, failure detection, and workflow-driven incident resolution with mandatory RCA enforcement.
+- **Why this project matters?**
+This system simulates real-world SRE workflows where high-volume system signals must be filtered, aggregated, and converted into actionable incidents with traceable resolution.
 
 ## Architecture Diagram
 
@@ -37,6 +39,7 @@ flowchart TD
 - Mandatory RCA: transition to CLOSED rejected unless RCA complete.
 - MTTR: auto computed from `incident_start` and `incident_end`.
 - Observability: `/health` endpoint + throughput logs every 5 seconds.
+- UI Enhancement: Toggle to show/hide closed incidents for better observability.
 
 ## Run Locally (Docker Compose)
 1. Ensure Docker Desktop is running.
@@ -64,7 +67,7 @@ This simulates bursty failures, including RDBMS and MCP errors.
 ## API Endpoints
 - `POST /ingest`
 - `GET /incidents` (active incidents only)
-- `GET /incidents?only_closed=true` (closed incidents only)
+- `GET /incidents?include_closed=true` (closed incidents only)
 - `GET /incidents/{id}`
 - `PATCH /incidents/{id}/status`
 - `PUT /incidents/{id}/rca`
@@ -136,7 +139,7 @@ This simulates bursty failures, including RDBMS and MCP errors.
 - `scripts/simulate_signals.py` - burst signal generator
 - `PROMPTS_AND_PLAN.md` - prompts/spec/plans used
 
-## GitHub & Submission
-After pushing this repository, include the GitHub URL in your submission PDF named:
+## Author
 
-`AMAN LODHA - Infrastructure / SRE Intern Assignment.pdf`
+Aman Lodha  
+Infrastructure / SRE Intern Candidate
