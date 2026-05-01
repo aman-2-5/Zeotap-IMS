@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Incident Management Dashboard</title>
+    <style>
+      :root {
+        --bg: #070d18;
+        --panel: #101a2c;
+        --panel-2: #0d1626;
+        --line: #24344f;
+        --text: #e8eef8;
+        --muted: #9bb0d1;
+        --primary: #2b7fff;
+        --ok: #1f9d63;
+        --warn: #d9a11e;
+        --danger: #da3e52;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: radial-gradient(1000px 700px at 0% -10%, #1a2d4f 0%, var(--bg) 55%);
+        color: var(--text);
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 22px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(5, 10, 20, 0.65);
+        backdrop-filter: blur(6px);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      .title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.2px; }
+      .sub { color: var(--muted); font-size: 13px; }
+      .health {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: #cde5ff;
+      }
+      .container {
+        display: grid;
+        grid-template-columns: minmax(420px, 1fr) minmax(460px, 1fr);
+        gap: 16px;
+        padding: 16px;
+      }
+      .card {
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      }
+      h2, h3, h4 { margin-top: 0; }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .stat {
+        background: #0b1322;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .stat .k { color: var(--muted); font-size: 12px; }
+      .stat .v { font-size: 20px; font-weight: 700; margin-top: 4px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        font-size: 14px;
+      }
+      th { color: #b9c8e5; font-weight: 600; }
+      tr:hover { background: rgba(255, 255, 255, 0.02); }
+      button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 9px 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      button:disabled { cursor: not-allowed; opacity: 0.5; }
+      input, textarea, select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #304566;
+        background: #0a1221;
+        color: #f0f5ff;
+      }
+      textarea { resize: vertical; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+      .pill {
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 12px;
+        display: inline-block;
+        border: 1px solid transparent;
+      }
+      .sev-P0 { background: rgba(218, 62, 82, 0.18); border-color: rgba(218, 62, 82, 0.45); color: #ffb7c0; }
+      .sev-P1 { background: rgba(217, 161, 30, 0.16); border-color: rgba(217, 161, 30, 0.45); color: #ffd995; }
+      .sev-P2 { background: rgba(58, 138, 255, 0.18); border-color: rgba(58, 138, 255, 0.45); color: #b9d7ff; }
+      .sev-P3 { background: rgba(84, 114, 153, 0.2); border-color: rgba(84, 114, 153, 0.45); color: #cfdbf2; }
+      .status {
+        font-size: 12px;
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+      .st-OPEN { background: rgba(58, 138, 255, 0.18); color: #b9d7ff; }
+      .st-INVESTIGATING { background: rgba(217, 161, 30, 0.16); color: #ffd995; }
+      .st-RESOLVED { background: rgba(31, 157, 99, 0.18); color: #a9f1ce; }
+      .st-CLOSED { background: rgba(104, 127, 161, 0.18); color: #d8e3f8; }
+      .muted { color: var(--muted); font-size: 12px; }
+      .banner {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #0b1526;
+        color: #cde0ff;
+        font-size: 13px;
+      }
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin: 10px 0 14px;
+      }
+      .step {
+        text-align: center;
+        padding: 8px 6px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #0b1322;
+        color: #9fb3d5;
+        font-size: 12px;
+      }
+      .step.active { border-color: #4e7ed0; color: #e8f0ff; background: rgba(43, 127, 255, 0.18); }
+      .step.done { border-color: #2c8a63; color: #b7f3d7; background: rgba(31, 157, 99, 0.16); }
+      .signal-list {
+        max-height: 280px;
+        overflow: auto;
+        padding-right: 6px;
+      }
+      .signal-list li { margin-bottom: 8px; }
+      @media (max-width: 1100px) {
+        .container { grid-template-columns: 1fr; }
+      }
+      /* ===== STRONG FIX FOR DATE ICON ===== */
+
+/* Force white calendar icon */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(3) contrast(2);
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Make input background darker for contrast */
+input[type="datetime-local"] {
+  background-color: #0a1221;
+  color: #ffffff;
+  position: relative;
+}
+
+/* Extra fallback: add padding so icon area is clearer */
+input[type="datetime-local"] {
+  padding-right: 35px;
+}
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div>
+        <h1 class="title">Incident Management Console</h1>
+        <div class="sub">Real-time triage and RCA workflow</div>
+      </div>
+      <div id="healthChip" class="health">Checking health...</div>
+    </div>
+    <div class="container">
+      <div class="card">
+        <h2>Active Incidents</h2>
+        <div class="muted" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div>Live feed sorted by severity.</div>
+          <label style="display:flex; gap:8px; align-items:center; cursor:pointer;">
+            <input id="showClosedToggle" type="checkbox" style="width:auto;" onchange="showClosed = this.checked; fetchIncidents();" />
+            <span>Show closed</span>
+          </label>
+        </div>
+        <div class="stats">
+          <div class="stat"><div id="sTotalLabel" class="k">Total Active</div><div id="sTotal" class="v">0</div></div>
+          <div class="stat"><div class="k">Critical (P0/P1)</div><div id="sCritical" class="v">0</div></div>
+          <div class="stat"><div class="k">Signals Linked</div><div id="sSignals" class="v">0</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Component</th><th>Severity</th><th>Status</th><th>Signals</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="incidentRows"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Incident Detail</h2>
+        <div id="detailRoot">Select an incident from the left.</div>
+      </div>
+    </div>
+
+    <script>
+      const api = "http://localhost:8000";
+      let selectedIncident = null;
+      const stateOrder = ["OPEN", "INVESTIGATING", "RESOLVED", "CLOSED"];
+      let showClosed = false;
+
+      function sortSeverity(a, b) {
+        const order = { P0: 0, P1: 1, P2: 2, P3: 3 };
+        return order[a.severity] - order[b.severity];
+      }
+
+      async function refreshHealth() {
+        const chip = document.getElementById("healthChip");
+        try {
+          const res = await fetch(`${api}/health?t=${Date.now()}`, { cache: "no-store" });
+          const data = await res.json();
+          if (data.status === "ok") {
+            chip.textContent = "System Healthy";
+            chip.style.borderColor = "rgba(31,157,99,0.5)";
+            chip.style.color = "#b9f7d7";
+          } else {
+            chip.textContent = "System Degraded";
+            chip.style.borderColor = "rgba(217,161,30,0.5)";
+            chip.style.color = "#ffe0a3";
+          }
+        } catch {
+          chip.textContent = "System Unreachable";
+          chip.style.borderColor = "rgba(218,62,82,0.5)";
+          chip.style.color = "#ffc4cb";
+        }
+      }
+
+      async function fetchIncidents() {
+        const res = await fetch(`${api}/incidents?only_closed=${showClosed}&t=${Date.now()}`, { cache: "no-store" });
+        const rows = await res.json();
+        rows.sort(sortSeverity);
+        const total = rows.length;
+        const critical = rows.filter(r => r.severity === "P0" || r.severity === "P1").length;
+        const signals = rows.reduce((acc, r) => acc + (r.signal_count || 0), 0);
+        const totalLabel = document.getElementById("sTotalLabel");
+        if (totalLabel) totalLabel.textContent = showClosed ? "Total Closed" : "Total Active";
+        document.getElementById("sTotal").textContent = total;
+        document.getElementById("sCritical").textContent = critical;
+        document.getElementById("sSignals").textContent = signals;
+
+        const tbody = document.getElementById("incidentRows");
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td>${r.id}</td>
+            <td>${r.component_id}</td>
+            <td><span class="pill sev-${r.severity}">${r.severity}</span></td>
+            <td><span class="status st-${r.status}">${r.status}</span></td>
+            <td>${r.signal_count}</td>
+            <td><button onclick="loadDetail(${r.id})">View</button></td>
+          </tr>
+        `).join("");
+      }
+
+      function getTransitionPath(currentStatus, targetStatus) {
+        if (currentStatus === targetStatus) {
+          return [];
+        }
+        if (currentStatus === "OPEN" && targetStatus === "INVESTIGATING") return ["INVESTIGATING"];
+        if (currentStatus === "OPEN" && targetStatus === "RESOLVED") return ["INVESTIGATING", "RESOLVED"];
+        if (currentStatus === "OPEN" && targetStatus === "CLOSED") return ["INVESTIGATING", "RESOLVED", "CLOSED"];
+        if (currentStatus === "INVESTIGATING" && targetStatus === "RESOLVED") return ["RESOLVED"];
+        if (currentStatus === "INVESTIGATING" && targetStatus === "CLOSED") return ["RESOLVED", "CLOSED"];
+        if (currentStatus === "RESOLVED" && targetStatus === "CLOSED") return ["CLOSED"];
+        if (currentStatus === "RESOLVED" && targetStatus === "INVESTIGATING") return ["INVESTIGATING"];
+        return null;
+      }
+
+      async function patchStatus(id, status) {
+        const res = await fetch(`${api}/incidents/${id}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ new_status: status })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || `Failed at status ${status}`);
+        }
+      }
+
+      async function updateStatus(id) {
+        const status = document.getElementById("nextStatus").value;
+        const currentStatus = document.getElementById("currentStatus").value;
+        const hasCompleteRca = document.getElementById("hasCompleteRca").value === "true";
+        if (!status) {
+          alert("No valid status transition available from current state.");
+          return;
+        }
+        if (status === "CLOSED" && !hasCompleteRca) {
+          alert("Cannot move to CLOSED yet. Complete and save RCA first.");
+          return;
+        }
+        const path = getTransitionPath(currentStatus, status);
+        if (!path) {
+          alert(`Invalid transition from ${currentStatus} to ${status}.`);
+          return;
+        }
+        try {
+          for (const step of path) {
+            await patchStatus(id, step);
+          }
+        } catch (error) {
+          alert(error.message || "Status update failed");
+          await loadDetail(id);
+          await fetchIncidents();
+          return;
+        }
+        await loadDetail(id);
+        await fetchIncidents();
+        alert(`Status updated to ${status}`);
+      }
+
+      async function submitRca(id) {
+        const incidentStart = document.getElementById("incident_start").value;
+        const incidentEnd = document.getElementById("incident_end").value;
+        const rootCauseCategory = document.getElementById("root_cause_category").value;
+        const fixApplied = document.getElementById("fix_applied").value.trim();
+        const preventionSteps = document.getElementById("prevention_steps").value.trim();
+
+        if (!incidentStart || !incidentEnd) {
+          alert("Please select both incident start and end date-time.");
+          return;
+        }
+        const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+        if (!isoPattern.test(incidentStart) || !isoPattern.test(incidentEnd)) {
+          alert("Use date picker format: YYYY-MM-DDTHH:mm (valid 4-digit year).");
+          return;
+        }
+        const startYear = Number(incidentStart.slice(0, 4));
+        const endYear = Number(incidentEnd.slice(0, 4));
+        if (startYear < 2000 || startYear > 2100 || endYear < 2000 || endYear > 2100) {
+          alert("Year must be between 2000 and 2100.");
+          return;
+        }
+        const startDate = new Date(incidentStart);
+        const endDate = new Date(incidentEnd);
+        if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+          alert("Invalid date-time value. Please reselect with picker.");
+          return;
+        }
+        if (endDate <= startDate) {
+          alert("Incident end must be later than incident start.");
+          return;
+        }
+        if (!rootCauseCategory) {
+          alert("Please choose a root cause category.");
+          return;
+        }
+        if (fixApplied.length < 5) {
+          alert("Fix applied must be at least 5 characters.");
+          return;
+        }
+        if (preventionSteps.length < 5) {
+          alert("Prevention steps must be at least 5 characters.");
+          return;
+        }
+
+        const payload = {
+          incident_start: startDate.toISOString(),
+          incident_end: endDate.toISOString(),
+          root_cause_category: rootCauseCategory,
+          fix_applied: fixApplied,
+          prevention_steps: preventionSteps
+        };
+        const res = await fetch(`${api}/incidents/${id}/rca`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          if (Array.isArray(err.detail)) {
+            const message = err.detail
+              .map(e => `${(e.loc || []).join(".")}: ${e.msg}`)
+              .join("\n");
+            alert(`RCA save failed:\n${message}`);
+          } else {
+            alert(err.detail || "RCA save failed");
+          }
+          return;
+        }
+        alert("RCA saved");
+        await loadDetail(id);
+      }
+
+      async function loadDetail(id) {
+        selectedIncident = id;
+        const res = await fetch(`${api}/incidents/${id}?t=${Date.now()}`, { cache: "no-store" });
+        const data = await res.json();
+        const w = data.work_item;
+        const rca = data.rca || {};
+        const hasCompleteRca = Boolean(
+          rca.incident_start &&
+          rca.incident_end &&
+          rca.root_cause_category &&
+          rca.fix_applied &&
+          rca.prevention_steps
+        );
+        const targetOptionsMap = {
+          OPEN: ["INVESTIGATING", "RESOLVED", "CLOSED"],
+          INVESTIGATING: ["RESOLVED", "CLOSED"],
+          RESOLVED: ["CLOSED", "INVESTIGATING"],
+          CLOSED: []
+        };
+        let nextStatuses = targetOptionsMap[w.status] || [];
+        if (!hasCompleteRca) {
+          nextStatuses = nextStatuses.filter(s => s !== "CLOSED");
+        }
+        const statusOptions = nextStatuses.length
+          ? nextStatuses.map(s => `<option value="${s}">${s}</option>`).join("")
+          : `<option value="">No valid transitions</option>`;
+
+        const currentIndex = stateOrder.indexOf(w.status);
+        const timeline = stateOrder.map((step, index) => {
+          const cls = index < currentIndex ? "step done" : index === currentIndex ? "step active" : "step";
+          return `<div class="${cls}">${step}</div>`;
+        }).join("");
+
+        const signalPreview = data.signals.slice(0, 12).map(s => `<li>${s.occurred_at} :: ${s.message}</li>`).join("");
+        document.getElementById("detailRoot").innerHTML = `
+          <h3>#${w.id} ${w.component_id} (${w.component_type})</h3>
+          <p>
+            Status: <span class="status st-${w.status}">${w.status}</span>
+            &nbsp;|&nbsp; Severity: <span class="pill sev-${w.severity}">${w.severity}</span>
+          </p>
+          <div class="timeline">${timeline}</div>
+          <input id="currentStatus" type="hidden" value="${w.status}" />
+          <input id="hasCompleteRca" type="hidden" value="${hasCompleteRca}" />
+          <div class="row">
+            <select id="nextStatus">
+              ${statusOptions}
+            </select>
+            <button ${nextStatuses.length ? "" : "disabled"} onclick="updateStatus(${w.id})">Update Status</button>
+          </div>
+          <div class="banner">
+            Choose any target status; intermediate transitions run automatically.
+            Closing still requires a complete RCA.
+          </div>
+          ${hasCompleteRca ? '<div class="muted" style="margin-top:8px;color:#a9f1ce;">RCA complete: incident can be moved to CLOSED.</div>' : '<div class="muted" style="margin-top:8px;color:#ffd995;">RCA incomplete: CLOSED is disabled until RCA is fully saved.</div>'}
+          <h4>RCA</h4>
+          <div class="row">
+            <input id="incident_start" type="datetime-local" min="2000-01-01T00:00" max="2100-12-31T23:59" step="60" value="${(rca.incident_start || '').substring(0,16)}"/>
+            <input id="incident_end" type="datetime-local" min="2000-01-01T00:00" max="2100-12-31T23:59" step="60" value="${(rca.incident_end || '').substring(0,16)}"/>
+          </div>
+          <div class="row">
+            <select id="root_cause_category">
+              <option value="Config" ${rca.root_cause_category === "Config" ? "selected" : ""}>Config</option>
+              <option value="Dependency" ${rca.root_cause_category === "Dependency" ? "selected" : ""}>Dependency</option>
+              <option value="Capacity" ${rca.root_cause_category === "Capacity" ? "selected" : ""}>Capacity</option>
+              <option value="Code Regression" ${rca.root_cause_category === "Code Regression" ? "selected" : ""}>Code Regression</option>
+              <option value="Infra Failure" ${rca.root_cause_category === "Infra Failure" ? "selected" : ""}>Infra Failure</option>
+            </select>
+            <button onclick="submitRca(${w.id})">Save RCA</button>
+          </div>
+          <textarea id="fix_applied" rows="3" placeholder="Fix applied">${rca.fix_applied || ""}</textarea>
+          <textarea id="prevention_steps" rows="3" placeholder="Prevention steps">${rca.prevention_steps || ""}</textarea>
+          <h4>Raw Signals (NoSQL)</h4>
+          <ul class="signal-list">${signalPreview || "<li>No signals found</li>"}</ul>
+        `;
+
+        // Improve UX: mouse-wheel adjusts datetime minutes (instead of scrolling the page).
+        const startEl = document.getElementById("incident_start");
+        const endEl = document.getElementById("incident_end");
+        const clamp = (d, min, max) => new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime()));
+        const parseLocal = (v) => {
+          if (!v) return null;
+          const d = new Date(v);
+          return Number.isNaN(d.getTime()) ? null : d;
+        };
+        const minD = new Date("2000-01-01T00:00:00");
+        const maxD = new Date("2100-12-31T23:59:00");
+        const adjust = (input, deltaMinutes) => {
+          const d = parseLocal(input.value) || new Date();
+          d.setMinutes(d.getMinutes() + deltaMinutes);
+          const cd = clamp(d, minD, maxD);
+          const pad = (n) => String(n).padStart(2, "0");
+          const next = `${cd.getFullYear()}-${pad(cd.getMonth() + 1)}-${pad(cd.getDate())}T${pad(cd.getHours())}:${pad(cd.getMinutes())}`;
+          input.value = next;
+        };
+        const attachWheel = (input) => {
+          if (!input) return;
+          input.addEventListener(
+            "wheel",
+            (e) => {
+              // Only take over when the input is focused/hovered.
+              e.preventDefault();
+              const dir = e.deltaY > 0 ? -1 : 1; // natural scroll: wheel up -> increase
+              const step = e.shiftKey ? 10 : 1;
+              adjust(input, dir * step);
+            },
+            { passive: false }
+          );
+        };
+        attachWheel(startEl);
+        attachWheel(endEl);
+      }
+
+      refreshHealth();
+      fetchIncidents();
+      setInterval(refreshHealth, 8000);
+      setInterval(fetchIncidents, 3000);
+    </script>
+  </body>
+</html>

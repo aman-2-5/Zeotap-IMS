@@ -1,0 +1,22 @@
+[
+  {
+    "component_id": "RDBMS_PRIMARY_01",
+    "component_type": "RDBMS",
+    "message": "Primary DB heartbeat timeout",
+    "latency_ms": 8200,
+    "metadata": {
+      "region": "eu-central",
+      "service": "orders-api"
+    }
+  },
+  {
+    "component_id": "MCP_HOST_02",
+    "component_type": "MCP",
+    "message": "MCP host command execution error spike",
+    "latency_ms": 3200,
+    "metadata": {
+      "region": "eu-west",
+      "service": "job-runner"
+    }
+  }
+]
